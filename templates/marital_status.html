@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Burnout Detection - Step 3</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+        color: #1e293b;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    nav {
+        background: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 1rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+    .nav-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .logo {
+        font-size: 1.5rem;
+        font-weight: bold;
+        background: linear-gradient(135deg, #2563eb, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .nav-links {
+        display: flex;
+        gap: 2rem;
+        list-style: none;
+    }
+    .nav-links a {
+        text-decoration: none;
+        color: #475569;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+    .nav-links a:hover { color: #2563eb; }
+
+    .main-container {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 3rem 2rem;
+    }
+    .container {
+        background: white;
+        padding: 2.5rem 3rem;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 700px;
+        text-align: center;
+    }
+
+    .header h1 {
+        font-size: 24px;
+        color: #2563eb;
+        margin-bottom: 6px;
+    }
+    .header p {
+        color: #64748b;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+    .progress-bar {
+        height: 5px;
+        background: #e0e0e0;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        width: 100%;
+        background: linear-gradient(90deg, #2563eb, #8b5cf6);
+        transition: width 0.3s;
+    }
+
+    .options {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+
+    .option-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 120px;
+        height: 120px;
+        border-radius: 20px;
+        cursor: pointer;
+        color: white;
+        font-weight: 600;
+        transition: transform 0.3s, box-shadow 0.3s;
+        text-align: center;
+        padding: 10px;
+    }
+
+    .option-married { background: linear-gradient(135deg, #34d399, #059669); }
+    .option-unmarried { background: linear-gradient(135deg, #60a5fa, #2563eb); }
+    .option-widow { background: linear-gradient(135deg, #f472b6, #ec4899); }
+
+    .option-box:hover {
+        transform: scale(1.1);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+    .option-box.selected {
+        box-shadow: 0 0 0 4px #2563eb;
+    }
+
+    .option-box .icon {
+        font-size: 40px;
+        margin-bottom: 10px;
+    }
+
+    button {
+        margin-top: 25px;
+        padding: 12px;
+        width: 100%;
+        font-size: 16px;
+        font-weight: 600;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        background: linear-gradient(135deg, #2563eb, #8b5cf6);
+        transition: all 0.3s;
+    }
+    button:hover { opacity: 0.9; transform: scale(1.05); }
+    button:active { transform: scale(0.98); }
+
+    footer {
+        background: white;
+        padding: 2rem;
+        text-align: center;
+        color: #64748b;
+    }
+
+    @media (max-width: 768px) {
+        .option-box { width: 100px; height: 100px; font-size: 14px; }
+    }
+</style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-container">
+        <div class="logo">🧠 Burnout Detection</div>
+        <ul class="nav-links">
+            <li><a href="home.html">Home</a></li>
+            <li><a href="gender.html">Questionnaire</a></li>
+            <li><a href="#real-time">Real-time Analysis</a></li>
+            <li><a href="#about">About Us</a></li>
+        </ul>
+    </div>
+</nav>
+
+<div class="main-container">
+    <div class="container">
+        <div class="header">
+            <h1>Marital Status</h1>
+            <p>Step 3 of 3 - Select your marital status</p>
+        </div>
+
+        <div class="progress-bar"><div class="progress-fill"></div></div>
+
+        <form id="statusForm">
+            <div class="options" id="statusOptions">
+                <div class="option-box option-unmarried" data-value="Unmarried">
+                    <div class="icon">🤵</div>
+                    Unmarried
+                </div>
+                <div class="option-box option-married" data-value="Married">
+                    <div class="icon">👰</div>
+                    Married
+                </div>
+                <div class="option-box option-widow" data-value="Widow">
+                    <div class="icon">💔</div>
+                    Widow
+                </div>
+            </div>
+
+            <button type="button" id="submitBtn">Continue to Questionnaire →</button>
+        </form>
+    </div>
+</div>
+
+<footer>
+    <p>&copy; 2025 Burnout Detection System. Supporting your mental wellness journey.</p>
+</footer>
+
+<script>
+const options = document.querySelectorAll('.option-box');
+options.forEach(option => {
+    option.addEventListener('click', () => {
+        options.forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+    });
+});
+
+// BUTTON CONNECTS TO question.html
+document.getElementById('submitBtn').addEventListener('click', () => {
+    const status = document.querySelector('.option-box.selected')?.dataset.value;
+    
+    if(!status){ 
+        alert('Please select your marital status.'); 
+        return; 
+    }
+    
+    // Navigate to question.html (singular, not plural)
+    window.location.href = 'question.html';
+});
+</script>
+
+</body>
+</html>

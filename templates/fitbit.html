@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitbit Integration - Burnout Detection</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #e8eef7;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #555;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        .live-demo-btn {
+            background: #667eea;
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .live-demo-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Connection Section */
+        .connection-card {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .fitbit-logo {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .connection-card h1 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        .connection-card p {
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .optional-tag {
+            color: #999;
+            font-weight: normal;
+            font-size: 0.85rem;
+        }
+
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .consent-box {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: start;
+            gap: 0.8rem;
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            margin-top: 2px;
+        }
+
+        .checkbox-wrapper label {
+            cursor: pointer;
+            color: #555;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .connect-btn {
+            width: 100%;
+            background: #00B0B9;
+            color: white;
+            border: none;
+            padding: 1rem;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .connect-btn:hover:not(:disabled) {
+            background: #009DA5;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 176, 185, 0.3);
+        }
+
+        .connect-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: none;
+        }
+
+        .dashboard.active {
+            display: block;
+        }
+
+        .dashboard-header {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-header h2 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .last-sync {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .metric-icon {
+            font-size: 1.5rem;
+        }
+
+        .metric-status {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-good {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .metric-title {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 150px;
+            margin-top: 1rem;
+        }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .chart-card h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .large-chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Recommendations Section */
+        .recommendations {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .recommendations h3 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .recommendation-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .recommendation-card h4 {
+            color: #333;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .recommendation-card p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .priority-high {
+            border-left-color: #e74c3c;
+        }
+
+        .priority-medium {
+            border-left-color: #f39c12;
+        }
+
+        .priority-low {
+            border-left-color: #27ae60;
+        }
+
+        /* Loading Animation */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            display: none;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 2rem auto;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .connection-card {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">
+            <div class="logo-icon">🧠</div>
+            <span>Burnout Detection</span>
+        </div>
+        <div class="nav-links">
+            <a href="#home">Home</a>
+            <a href="#questionnaire">Questionnaire</a>
+            <a href="#analysis">Real-time Analysis</a>
+            <a href="#about">About Us</a>
+            <a href="index.html" class="live-demo-btn">Live Demo</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Connection Card -->
+        <div class="connection-card" id="connectionCard">
+            <div class="fitbit-logo">⌚</div>
+            <h1>Connect Your Fitbit</h1>
+            <p>Link your Fitbit account to get real-time health insights and personalized burnout prevention recommendations</p>
+            
+            <form id="connectForm">
+                <div class="form-group">
+                    <label>User Name <span class="optional-tag"></span></label>
+                    <input type="text" id="userName" placeholder="Enter your name">
+                </div>
+
+                <div class="consent-box">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="consentCheck" required>
+                        <label for="consentCheck">I allow my Fitbit data to be used for burnout analysis</label>
+                    </div>
+                    <div class="error-message" id="consentError">Please accept the consent to continue</div>
+                </div>
+
+                <button type="submit" class="connect-btn" id="connectBtn">
+                    <span>🔗</span>
+                    Connect with Fitbit
+                </button>
+            </form>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Syncing your health data...</p>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="dashboard" id="dashboard">
+            <div class="dashboard-header">
+                <h2>Your Health Dashboard</h2>
+                <p class="last-sync" id="lastSync">Last synced: Just now</p>
+            </div>
+
+            <div class="metrics-grid">
+                <!-- Heart Rate -->
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">❤️</span>
+                        <span class="metric-status" id="hrStatus">Normal</span>
+                    </div>
+                    <div class="metric-title">Resting Heart Rate</div>
+                    <div class="metric-value" id="hrValue">72 <span style="font-size: 1rem;">bpm</span></div>
+                    <div class="chart-container">
+                        <canvas id="hrChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Sleep -->
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">😴</span>
+                        <span class="metric-status" id="sleepStatus">Good</span>
+                    </div>
+                    <div class="metric-title">Sleep Duration</div>
+                    <div class="metric-value" id="sleepValue">7.2 <span style="font-size: 1rem;">hrs</span></div>
+                    <div class="chart-container">
+                        <canvas id="sleepChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Steps -->
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">👟</span>
+                        <span class="metric-status" id="stepsStatus">Good</span>
+                    </div>
+                    <div class="metric-title">Daily Steps</div>
+                    <div class="metric-value" id="stepsValue">8,234</div>
+                    <div class="chart-container">
+                        <canvas id="stepsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Stress Score -->
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">🧘</span>
+                        <span class="metric-status" id="stressStatus">Normal</span>
+                    </div>
+                    <div class="metric-title">Stress Level</div>
+                    <div class="metric-value" id="stressValue">45 <span style="font-size: 1rem;">/100</span></div>
+                    <div class="chart-container">
+                        <canvas id="stressChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Charts -->
+            <div class="charts-section">
+                <div class="chart-card">
+                    <h3>📊 Weekly Activity Overview</h3>
+                    <div class="large-chart-container">
+                        <canvas id="weeklyChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3>💤 Sleep Quality Trends</h3>
+                    <div class="large-chart-container">
+                        <canvas id="sleepTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="recommendations" id="recommendations">
+                <h3>🎯 Personalized Recommendations</h3>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let charts = {};
+        let healthData = {};
+
+        // Generate random health data
+        function generateHealthData() {
+            const hr = Math.floor(Math.random() * (85 - 65) + 65);
+            const sleep = (Math.random() * (8.5 - 5) + 5).toFixed(1);
+            const steps = Math.floor(Math.random() * (12000 - 4000) + 4000);
+            const stress = Math.floor(Math.random() * (80 - 30) + 30);
+
+            return { hr, sleep, steps, stress };
+        }
+
+        // Update status based on values
+        function getStatus(type, value) {
+            switch(type) {
+                case 'hr':
+                    if (value <= 75) return { text: 'Normal', class: 'status-good' };
+                    if (value <= 82) return { text: 'Elevated', class: 'status-warning' };
+                    return { text: 'High', class: 'status-danger' };
+                case 'sleep':
+                    if (value >= 7) return { text: 'Good', class: 'status-good' };
+                    if (value >= 6) return { text: 'Fair', class: 'status-warning' };
+                    return { text: 'Poor', class: 'status-danger' };
+                case 'steps':
+                    if (value >= 8000) return { text: 'Good', class: 'status-good' };
+                    if (value >= 5000) return { text: 'Fair', class: 'status-warning' };
+                    return { text: 'Low', class: 'status-danger' };
+                case 'stress':
+                    if (value <= 50) return { text: 'Normal', class: 'status-good' };
+                    if (value <= 65) return { text: 'Elevated', class: 'status-warning' };
+                    return { text: 'High', class: 'status-danger' };
+            }
+        }
+
+        // Create mini chart
+        function createMiniChart(canvasId, data, color) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['', '', '', '', '', '', ''],
+                    datasets: [{
+                        data: data,
+                        borderColor: color,
+                        backgroundColor: color + '20',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Create weekly activity chart
+        function createWeeklyChart() {
+            const ctx = document.getElementById('weeklyChart').getContext('2d');
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: 'Steps',
+                        data: days.map(() => Math.floor(Math.random() * (12000 - 4000) + 4000)),
+                        backgroundColor: '#667eea'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: value => value.toLocaleString() }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Create sleep trend chart
+        function createSleepTrendChart() {
+            const ctx = document.getElementById('sleepTrendChart').getContext('2d');
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: days,
+                    datasets: [
+                        {
+                            label: 'Deep Sleep',
+                            data: days.map(() => (Math.random() * (3 - 1.5) + 1.5).toFixed(1)),
+                            borderColor: '#764ba2',
+                            backgroundColor: '#764ba240',
+                            fill: true
+                        },
+                        {
+                            label: 'Light Sleep',
+                            data: days.map(() => (Math.random() * (4 - 2.5) + 2.5).toFixed(1)),
+                            borderColor: '#667eea',
+                            backgroundColor: '#667eea40',
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Hours' } }
+                    }
+                }
+            });
+        }
+
+        // Generate recommendations
+        function generateRecommendations(data) {
+            const recs = [];
+            
+            if (data.sleep < 6.5) {
+                recs.push({
+                    priority: 'high',
+                    icon: '🚨',
+                    title: 'Urgent: Improve Sleep Quality',
+                    text: `Your sleep duration is ${data.sleep} hours. Aim for 7-8 hours tonight. Try avoiding screens 1 hour before bed.`
+                });
+            }
+
+            if (data.stress > 65) {
+                recs.push({
+                    priority: 'high',
+                    icon: '⚠️',
+                    title: 'High Stress Alert',
+                    text: 'Your stress levels are elevated. Consider taking 15-minute breaks every 2 hours and practice deep breathing.'
+                });
+            }
+
+            if (data.steps < 6000) {
+                recs.push({
+                    priority: 'medium',
+                    icon: '💪',
+                    title: 'Increase Physical Activity',
+                    text: 'A 20-minute walk can help reduce stress and improve mood. Start with achievable goals.'
+                });
+            }
+
+            if (data.hr > 78) {
+                recs.push({
+                    priority: 'medium',
+                    icon: '🧘',
+                    title: 'Schedule Recovery Time',
+                    text: 'Your elevated heart rate suggests you need more recovery. Schedule at least one rest day this week.'
+                });
+            }
+
+            recs.push({
+                priority: 'low',
+                icon: '💧',
+                title: 'Stay Hydrated',
+                text: 'Proper hydration improves focus and reduces fatigue. Aim for 8 glasses of water throughout the day.'
+            });
+
+            recs.push({
+                priority: 'low',
+                icon: '📱',
+                title: 'Digital Detox',
+                text: 'Implement "device-free" hours in the evening to improve sleep quality and reduce mental fatigue.'
+            });
+
+            return recs;
+        }
+
+        // Update dashboard
+        function updateDashboard() {
+            healthData = generateHealthData();
+
+            // Update values
+            document.getElementById('hrValue').innerHTML = `${healthData.hr} <span style="font-size: 1rem;">bpm</span>`;
+            document.getElementById('sleepValue').innerHTML = `${healthData.sleep} <span style="font-size: 1rem;">hrs</span>`;
+            document.getElementById('stepsValue').textContent = healthData.steps.toLocaleString();
+            document.getElementById('stressValue').innerHTML = `${healthData.stress} <span style="font-size: 1rem;">/100</span>`;
+
+            // Update statuses
+            const hrStatus = getStatus('hr', healthData.hr);
+            const sleepStatus = getStatus('sleep', parseFloat(healthData.sleep));
+            const stepsStatus = getStatus('steps', healthData.steps);
+            const stressStatus = getStatus('stress', healthData.stress);
+
+            document.getElementById('hrStatus').textContent = hrStatus.text;
+            document.getElementById('hrStatus').className = 'metric-status ' + hrStatus.class;
+
+            document.getElementById('sleepStatus').textContent = sleepStatus.text;
+            document.getElementById('sleepStatus').className = 'metric-status ' + sleepStatus.class;
+
+            document.getElementById('stepsStatus').textContent = stepsStatus.text;
+            document.getElementById('stepsStatus').className = 'metric-status ' + stepsStatus.class;
+
+            document.getElementById('stressStatus').textContent = stressStatus.text;
+            document.getElementById('stressStatus').className = 'metric-status ' + stressStatus.class;
+
+            // Create mini charts
+            const hrData = Array.from({length: 7}, () => Math.floor(Math.random() * (85 - 65) + 65));
+            const sleepData = Array.from({length: 7}, () => Math.random() * (8.5 - 5) + 5);
+            const stepsData = Array.from({length: 7}, () => Math.floor(Math.random() * (12000 - 4000) + 4000));
+            const stressData = Array.from({length: 7}, () => Math.floor(Math.random() * (80 - 30) + 30));
+
+            if (charts.hr) charts.hr.destroy();
+            if (charts.sleep) charts.sleep.destroy();
+            if (charts.steps) charts.steps.destroy();
+            if (charts.stress) charts.stress.destroy();
+
+            charts.hr = createMiniChart('hrChart', hrData, '#e74c3c');
+            charts.sleep = createMiniChart('sleepChart', sleepData, '#764ba2');
+            charts.steps = createMiniChart('stepsChart', stepsData, '#667eea');
+            charts.stress = createMiniChart('stressChart', stressData, '#f39c12');
+
+            // Create large charts
+            if (charts.weekly) charts.weekly.destroy();
+            if (charts.sleepTrend) charts.sleepTrend.destroy();
+
+            charts.weekly = createWeeklyChart();
+            charts.sleepTrend = createSleepTrendChart();
+
+            // Generate recommendations
+            const recommendations = generateRecommendations(healthData);
+            const recsContainer = document.getElementById('recommendations');
+            let recsHTML = '<h3>🎯 Personalized Recommendations</h3>';
+            
+            recommendations.forEach(rec => {
+                recsHTML += `
+                    <div class="recommendation-card priority-${rec.priority}">
+                        <h4>${rec.icon} ${rec.title}</h4>
+                        <p>${rec.text}</p>
+                    </div>
+                `;
+            });
+
+            recsContainer.innerHTML = recsHTML;
+        }
+
+        // Form submission
+        document.getElementById('connectForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const consentCheck = document.getElementById('consentCheck');
+            const errorMsg = document.getElementById('consentError');
+            
+            if (!consentCheck.checked) {
+                errorMsg.classList.add('show');
+                return;
+            }
+
+            errorMsg.classList.remove('show');
+            
+            // Hide connection card
+            document.getElementById('connectionCard').style.display = 'none';
+            
+            // Show loading
+            document.getElementById('loading').classList.add('active');
+            
+            // Simulate OAuth and data fetch
+            setTimeout(() => {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('dashboard').classList.add('active');
+                updateDashboard();
+            }, 2500);
+        });
+
+        // Auto-refresh simulation
+        setInterval(() => {
+            const syncText = document.getElementById('lastSync');
+            if (syncText && document.getElementById('dashboard').classList.contains('active')) {
+                const now = new Date();
+                syncText.textContent = `Last synced: ${now.toLocaleTimeString()}`;
+            }
+        }, 60000);
+
+        // Refresh data every 5 minutes
+        setInterval(() => {
+            if (document.getElementById('dashboard').classList.contains('active')) {
+                updateDashboard();
+            }
+        }, 300000);
+    </script>
+</body>
+</html>

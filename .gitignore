@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+
+# Generated session data
+sessions/
+voice_sessions/
+
+# Local data
+data/
+
+# Environment variables
+.env
+
+# OS files
+.DS_Store
+Thumbs.db

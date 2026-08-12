@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burnout Detection System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+            color: #1e293b;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #2563eb, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #475569;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #2563eb;
+        }
+
+        .hero {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #2563eb, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: #475569;
+            max-width: 700px;
+            margin: 0 auto 1rem;
+            line-height: 1.6;
+        }
+
+        .info-text {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .info-text h2 {
+            color: #2563eb;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .info-text p {
+            color: #64748b;
+            line-height: 1.8;
+            text-align: left;
+        }
+
+        .cards-container {
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-align: center;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+        }
+
+        .card-questionnaire .card-icon {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+        }
+
+        .card-voice .card-icon {
+            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+        }
+
+        .card-face .card-icon {
+            background: linear-gradient(135deg, #14b8a6, #2dd4bf);
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+
+        .card p {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-button {
+            background: linear-gradient(135deg, #2563eb, #8b5cf6);
+            color: white;
+            border: none;
+            padding: 1rem 3rem;
+            border-radius: 8px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.3s, transform 0.2s;
+            margin: 2rem auto;
+            display: block;
+        }
+
+        .card-button:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        .card-button:active {
+            transform: scale(0.98);
+        }
+
+        .features {
+            max-width: 1200px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+            text-align: center;
+        }
+
+        .features h2 {
+            font-size: 2rem;
+            margin-bottom: 3rem;
+            color: #1e293b;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-item {
+            padding: 1.5rem;
+        }
+
+        .feature-item h3 {
+            color: #2563eb;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-item p {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        footer {
+            background: white;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 4rem;
+            color: #64748b;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .nav-links {
+                gap: 1rem;
+            }
+
+            .cards-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="logo">🧠 Burnout Detection</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#questionnaire">Questionnaire</a></li>
+                <li><a href="#real-time">Real-time Analysis</a></li>
+                <li><a href="#about">About Us</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <h1>Burnout Detection System</h1>
+        <p>Take control of your mental well-being with our comprehensive burnout assessment tools</p>
+        
+        <div class="info-text">
+            <h2>What is Burnout?</h2>
+            <p>Burnout is a state of emotional, physical, and mental exhaustion caused by prolonged stress. Our advanced detection system uses multiple analysis methods to help identify early signs of burnout, enabling you to take proactive steps toward better mental health and work-life balance. Whether through detailed questionnaires, voice pattern analysis, or facial expression recognition, we provide comprehensive insights into your well-being.</p>
+        </div>
+    </div>
+
+    <div class="cards-container">
+        <div class="card card-questionnaire">
+            <div class="card-icon">📝</div>
+            <h3>Questionnaire Analysis</h3>
+            <p>Complete our scientifically-validated questionnaire to assess your burnout risk level through targeted questions about stress, exhaustion, and work satisfaction.</p>
+        </div>
+
+        <div class="card card-voice">
+            <div class="card-icon">🎤</div>
+            <h3>Voice Analysis</h3>
+            <p>Our AI analyzes vocal patterns, tone, and speech characteristics to detect signs of stress and emotional exhaustion in your voice.</p>
+        </div>
+
+        <div class="card card-face">
+            <div class="card-icon">😊</div>
+            <h3>Face Analysis</h3>
+            <p>Advanced facial recognition technology evaluates expressions and microexpressions to identify emotional states associated with burnout.</p>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin: 2rem 0;">
+        <button class="card-button" onclick="startAssessment()">Start Assessment</button>
+    </div>
+
+    <div class="features">
+        <h2>Why Choose Our System?</h2>
+        <div class="feature-grid">
+            <div class="feature-item">
+                <h3>🔒 Confidential</h3>
+                <p>Your data is secure and private. We prioritize your confidentiality.</p>
+            </div>
+            <div class="feature-item">
+                <h3>⚡ Real-time Results</h3>
+                <p>Get instant feedback and analysis of your burnout risk level.</p>
+            </div>
+            <div class="feature-item">
+                <h3>🎯 Accurate Assessment</h3>
+                <p>Multiple analysis methods ensure comprehensive and reliable results.</p>
+            </div>
+            <div class="feature-item">
+                <h3>💡 Actionable Insights</h3>
+                <p>Receive personalized recommendations for managing stress.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Burnout Detection System. Supporting your mental wellness journey.</p>
+    </footer>
+
+    <script>
+        function startAssessment() {
+            window.location.href = 'gender.html';
+        }
+
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

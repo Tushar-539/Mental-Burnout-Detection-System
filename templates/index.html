@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Driven Burnout Detection System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            color: rgb(16, 15, 15);
+            margin-bottom: 30px;
+            padding: 30px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .webcam-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+        }
+
+        .camera-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 1.3em;
+            color: #6c757d;
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        #videoElement {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+            border-radius: 10px;
+        }
+
+        .capture-overlay {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(52, 58, 64, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .voice-indicator {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            right: 15px;
+            background: rgba(40, 167, 69, 0.95);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            text-align: center;
+            display: none;
+            animation: pulse 1.5s infinite;
+        }
+
+        .voice-indicator.speaking {
+            background: rgba(0, 123, 255, 0.95);
+        }
+
+        .voice-indicator.listening {
+            background: rgba(220, 53, 69, 0.95);
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.8;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.8;
+            }
+        }
+
+        .controls-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .controls-section h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .progress-section {
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #11998e, #38ef7d);
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        .status {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 500;
+            border-left: 4px solid;
+        }
+
+        .status.info {
+            background: #d5edda;
+            color: #155724;
+            border-color: #28a745;
+        }
+
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border-color: #ffc107;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #dc3545;
+        }
+
+        .voice-prompts {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+            border: 1px solid #dee2e6;
+        }
+
+        .voice-prompt {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #6c757d;
+            transition: all 0.3s ease;
+        }
+
+        .voice-prompt.active {
+            border-left-color: #28a745;
+            background: #d5edda;
+            transform: scale(1.02);
+        }
+
+        .frames-captured {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            min-height: 80px;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #dee2e6;
+        }
+
+        .frame-thumbnail {
+            width: 60px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 2px solid #dee2e6;
+            transition: transform 0.2s;
+        }
+
+        .frame-thumbnail:hover {
+            transform: scale(1.1);
+            border-color: #667eea;
+        }
+
+        .results-section {
+            grid-column: 1 / -1;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .emotion-result {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 12px 0;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .emotion-bar {
+            flex: 1;
+            height: 12px;
+            background: #ecf0f1;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 0 15px;
+        }
+
+        .emotion-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.8s ease;
+        }
+
+        .stress-indicator {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .stress-level {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+            text-transform: uppercase;
+        }
+
+        .recommendations {
+            margin-top: 30px;
+        }
+
+        .recommendation-item {
+            background: #e8f6f3;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #27ae60;
+        }
+
+        .session-info {
+            background: #e8f6f3;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #d1ecf1;
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .camera-container {
+                height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            header h1 {
+                font-size: 2em;
+            }
+
+            .camera-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 AI Driven Burnout Detection System</h1>
+        </header>
+
+        <div class="main-layout">
+            <div class="webcam-section">
+                <h3>📹 Camera Feed & Voice Interaction</h3>
+                <div class="camera-container">
+                    <div class="camera-placeholder" id="cameraPlaceholder">
+                        <div>Click "Start Camera" to begin your assessment</div>
+                        <div style="font-size: 0.9em; color: #6c757d;">Facial + Iris + Voice analysis in 1 minute</div>
+                    </div>
+                    <video id="videoElement" autoplay muted playsinline></video>
+                    <div class="capture-overlay" id="captureOverlay">
+                        <span id="captureTimer">00:00</span>
+                    </div>
+                    <div class="voice-indicator" id="voiceIndicator"></div>
+                </div>
+
+                <div id="captureStatus" class="status info" style="display: none;">
+                    Ready to begin integrated analysis...
+                </div>
+
+                <div class="progress-section">
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+
+                <div class="voice-prompts" id="voicePrompts">
+                    <h4>🎤 Voice Interaction Timeline</h4>
+                    <div class="voice-prompt">
+                        <div class="prompt-time">0:05 - Greeting</div>
+                        <div class="prompt-text">System will greet you and explain the process</div>
+                    </div>
+                    <div class="voice-prompt">
+                        <div class="prompt-time">0:15 - Question 1</div>
+                        <div class="prompt-text">How Much do you spent on social media?</div>
+                    </div>
+                    <div class="voice-prompt">
+                        <div class="prompt-time">0:30 - Question 2</div>
+                        <div class="prompt-text">What's your biggest source of stress lately?</div>
+                    </div>
+                    <div class="voice-prompt">
+                        <div class="prompt-time">0:48 - Question 3</div>
+                        <div class="prompt-text">How has your sleep quality been recently?</div>
+                    </div>
+                </div>
+
+                <div class="frames-captured" id="framesThumbnails">
+                    <span style="color: #6c757d;">Captured frames will appear here</span>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <h3>🎮 Controls</h3>
+                <button id="startBtn" class="btn btn-primary">Start Camera</button>
+                <button id="beginBtn" class="btn btn-success" disabled>Start Analysis</button>
+                <button id="analyzeBtn" class="btn btn-warning" disabled>Get Results</button>
+                <button id="retakeBtn" class="btn btn-secondary" disabled>Retake Test</button>
+
+                <div id="systemStatus" class="status info">
+                    System ready. Click "Start Camera" to begin.
+                </div>
+
+                <div id="sessionInfo" class="session-info" style="display: none;">
+                    <h4>📊 Session Information</h4>
+                    <p><strong>Session ID:</strong> <span id="sessionId"></span></p>
+                    <p><strong>Duration:</strong> 60 seconds</p>
+                    <p><strong>Frames:</strong> <span id="frameCount">0</span>/6 (every 10s)</p>
+                    <p><strong>Voice:</strong> <span id="voiceCount">0</span>/3 questions</p>
+                    <p><strong>Status:</strong> <span id="sessionStatus">Waiting</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <h3>📊 Analysis Results</h3>
+            <div id="emotionResults"></div>
+
+            <div class="recommendations" id="recommendationsSection" style="display: none;">
+                <h3>💡 Personalized Recommendations</h3>
+                <div id="recommendationsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class IntegratedStressDetectionSystem {
+            constructor() {
+                this.initializeElements();
+                this.initializeVariables();
+                this.initializeEventListeners();
+                this.checkBackendConnection();
+                this.loadVoicePrompts();
+            }
+
+            initializeElements() {
+                this.videoElement = document.getElementById('videoElement');
+                this.cameraPlaceholder = document.getElementById('cameraPlaceholder');
+                this.startBtn = document.getElementById('startBtn');
+                this.beginBtn = document.getElementById('beginBtn');
+                this.analyzeBtn = document.getElementById('analyzeBtn');
+                this.retakeBtn = document.getElementById('retakeBtn');
+                this.systemStatus = document.getElementById('systemStatus');
+                this.captureStatus = document.getElementById('captureStatus');
+                this.captureOverlay = document.getElementById('captureOverlay');
+                this.captureTimer = document.getElementById('captureTimer');
+                this.voiceIndicator = document.getElementById('voiceIndicator');
+                this.progressBar = document.getElementById('progressBar');
+                this.progressFill = document.getElementById('progressFill');
+                this.framesThumbnails = document.getElementById('framesThumbnails');
+                this.resultsSection = document.getElementById('resultsSection');
+                this.emotionResults = document.getElementById('emotionResults');
+                this.recommendationsSection = document.getElementById('recommendationsSection');
+                this.recommendationsList = document.getElementById('recommendationsList');
+                this.sessionInfo = document.getElementById('sessionInfo');
+                this.sessionId = document.getElementById('sessionId');
+                this.frameCount = document.getElementById('frameCount');
+                this.voiceCount = document.getElementById('voiceCount');
+                this.sessionStatus = document.getElementById('sessionStatus');
+                this.voicePrompts = document.getElementById('voicePrompts');
+            }
+
+            initializeVariables() {
+                this.stream = null;
+                this.capturedFrames = [];
+                this.sessionID = this.generateSessionID();
+                this.backendSessionId = null;
+                this.captureInterval = null;
+                this.timerInterval = null;
+                this.currentFrame = 0;
+                this.captureStartTime = null;
+                this.backendConnected = false;
+                this.currentAnalysisData = null;
+                this.voicePromptsList = [];
+                this.mediaRecorder = null;
+                this.recordingChunks = [];
+                this.isRecording = false;
+                this.speechSynthesis = window.speechSynthesis;
+                this.voiceResponseCount = 0;
+                this.currentUtterance = null;
+                this.voicesLoaded = false;
+                this.isAnalysisActive = false;
+                this.questionRecorders = [];
+            }
+
+            generateSessionID() {
+                return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            initializeEventListeners() {
+                this.startBtn.addEventListener('click', () => this.startCamera());
+                this.beginBtn.addEventListener('click', () => this.beginAnalysis());
+                this.analyzeBtn.addEventListener('click', () => this.analyzeResults());
+                this.retakeBtn.addEventListener('click', () => this.retakeTest());
+
+                if (this.speechSynthesis) {
+                    this.speechSynthesis.addEventListener('voiceschanged', () => {
+                        this.voicesLoaded = true;
+                        console.log('✅ Voices loaded:', this.speechSynthesis.getVoices().length);
+                    });
+                }
+            }
+
+            async checkBackendConnection() {
+                try {
+                    const response = await fetch('/api/health');
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                    const data = await response.json();
+                    if (data.status === 'healthy') {
+                        this.backendConnected = true;
+                        const deepfaceStatus = data.deepface_available ? 'with DeepFace' : 'with mock analysis';
+                        this.updateStatus(`✅ Connected to server (${deepfaceStatus}) - Ready to begin`, 'info');
+                    }
+                } catch (error) {
+                    console.warn('Backend connection failed:', error);
+                    this.backendConnected = false;
+                    this.updateStatus('❌ Cannot connect to server', 'error');
+                }
+            }
+
+            async loadVoicePrompts() {
+                try {
+                    const response = await fetch('/api/get-voice-prompts');
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.voicePromptsList = data.prompts || [];
+                        console.log('✅ Loaded voice prompts:', this.voicePromptsList.length);
+                    }
+                } catch (error) {
+                    console.error('Failed to load voice prompts:', error);
+                    this.voicePromptsList = [
+                        {
+                            time: 5,
+                            text: "Hello! Welcome to our stress detection system. I'll ask you three questions while analyzing your facial expressions. Please speak naturally and clearly when you answer. Let's begin!",
+                            type: "greeting",
+                            duration: 8
+                        },
+                        {
+                            time: 15,
+                            text: "First question: On a scale of 1 to 10, how stressed do you feel right now? Please speak your answer clearly.",
+                            type: "question",
+                            id: 1,
+                            duration: 10
+                        },
+                        {
+                            time: 30,
+                            text: "Second question: What is currently your biggest source of stress or worry? Please describe briefly.",
+                            type: "question",
+                            id: 2,
+                            duration: 12
+                        },
+                        {
+                            time: 48,
+                            text: "Final question: How well have you been sleeping recently? Please share your sleep quality.",
+                            type: "question",
+                            id: 3,
+                            duration: 10
+                        }
+                    ];
+                    console.log('Using fallback voice prompts');
+                }
+            }
+
+            updateStatus(message, type = 'info') {
+                this.systemStatus.textContent = message;
+                this.systemStatus.className = `status ${type}`;
+                this.sessionStatus.textContent = message;
+            }
+
+            updateSessionInfo() {
+                this.sessionId.textContent = this.backendSessionId || this.sessionID;
+                this.frameCount.textContent = this.capturedFrames.length;
+                this.voiceCount.textContent = this.voiceResponseCount;
+                this.sessionInfo.style.display = 'block';
+            }
+
+            async startCamera() {
+                try {
+                    this.updateStatus('🎥 Starting camera and microphone...', 'info');
+
+                    const constraints = {
+                        video: {
+                            width: { ideal: 1280, min: 640 },
+                            height: { ideal: 720, min: 480 },
+                            facingMode: 'user'
+                        },
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        }
+                    };
+
+                    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    this.videoElement.srcObject = this.stream;
+
+                    await new Promise(resolve => {
+                        this.videoElement.onloadeddata = resolve;
+                    });
+
+                    this.videoElement.style.display = 'block';
+                    this.cameraPlaceholder.style.display = 'none';
+                    this.captureOverlay.style.display = 'block';
+
+                    this.startBtn.disabled = true;
+                    this.beginBtn.disabled = false;
+
+                    this.updateStatus('✅ Camera ready! Click "Start Analysis" for 1-minute session with voice interaction.', 'info');
+
+                } catch (error) {
+                    console.error('Camera error:', error);
+                    let errorMessage = '❌ Camera access failed. ';
+
+                    if (error.name === 'NotAllowedError') {
+                        errorMessage += 'Please allow camera and microphone permissions and refresh the page.';
+                    } else if (error.name === 'NotFoundError') {
+                        errorMessage += 'No camera or microphone found.';
+                    } else if (error.name === 'NotReadableError') {
+                        errorMessage += 'Camera is being used by another application.';
+                    } else {
+                        errorMessage += 'Please check camera and microphone availability.';
+                    }
+
+                    this.updateStatus(errorMessage, 'error');
+                }
+            }
+
+            async beginAnalysis() {
+                if (!this.backendConnected) {
+                    this.updateStatus('❌ Backend server not connected', 'error');
+                    return;
+                }
+
+                if (!this.stream) {
+                    this.updateStatus('❌ Camera not available', 'error');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/create-session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    const sessionData = await response.json();
+                    if (!sessionData.success) throw new Error(sessionData.error);
+
+                    this.backendSessionId = sessionData.session_id;
+                    console.log('✅ Session created:', this.backendSessionId);
+                    this.updateSessionInfo();
+                } catch (error) {
+                    this.updateStatus('❌ Failed to create session: ' + error.message, 'error');
+                    return;
+                }
+
+                this.capturedFrames = [];
+                this.voiceResponseCount = 0;
+                this.questionRecorders = [];
+                this.framesThumbnails.innerHTML = '';
+                this.currentFrame = 0;
+                this.captureStartTime = Date.now();
+                this.isAnalysisActive = true;
+
+                this.beginBtn.disabled = true;
+                this.progressBar.style.display = 'block';
+                this.captureStatus.style.display = 'block';
+                this.voicePrompts.style.display = 'block';
+                this.resultsSection.style.display = 'none';
+
+                this.updateStatus('🚀 Starting 1-minute integrated analysis...', 'info');
+
+                this.startTimer();
+                this.startFrameCapture();
+                await this.startVoiceProcess();
+            }
+
+            startTimer() {
+                this.timerInterval = setInterval(() => {
+                    if (!this.isAnalysisActive) return;
+
+                    const elapsed = Math.floor((Date.now() - this.captureStartTime) / 1000);
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = elapsed % 60;
+                    this.captureTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                    const progress = (elapsed / 60) * 100;
+                    this.progressFill.style.width = Math.min(progress, 100) + '%';
+
+                    if (elapsed >= 60) {
+                        this.endAnalysis();
+                    }
+                }, 1000);
+            }
+
+            startFrameCapture() {
+                setTimeout(() => this.captureFrame(), 1000);
+
+                this.captureInterval = setInterval(() => {
+                    if (this.currentFrame < 6 && this.isAnalysisActive) {
+                        this.captureFrame();
+                    }
+                }, 10000);
+            }
+
+            async startVoiceProcess() {
+                try {
+                    console.log('🎤 Starting voice recording process...');
+                    
+                    const audioTracks = this.stream.getAudioTracks();
+                    if (audioTracks.length === 0) {
+                        throw new Error('No audio tracks available in stream');
+                    }
+
+                    const audioStream = new MediaStream(audioTracks);
+
+                    this.mediaRecorder = new MediaRecorder(audioStream, {
+                        mimeType: 'audio/webm;codecs=opus'
+                    });
+
+                    this.recordingChunks = [];
+
+                    this.mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            this.recordingChunks.push(event.data);
+                            console.log('📼 Recording chunk:', event.data.size, 'bytes');
+                        }
+                    };
+
+                    this.mediaRecorder.onstop = async () => {
+                        console.log('🛑 Recording stopped, total chunks:', this.recordingChunks.length);
+                        const audioBlob = new Blob(this.recordingChunks, { type: 'audio/webm' });
+                        console.log('💾 Total recording size:', audioBlob.size, 'bytes');
+                        await this.saveFullVoiceRecording(audioBlob);
+                    };
+
+                    this.mediaRecorder.start(1000);
+                    this.isRecording = true;
+
+                    console.log('✅ Voice recording started successfully');
+
+                    this.scheduleVoicePrompts();
+
+                } catch (error) {
+                    console.error('❌ Voice recording setup failed:', error);
+                    this.updateStatus('⚠️ Voice recording failed - continuing with video only', 'warning');
+                }
+            }
+
+            scheduleVoicePrompts() {
+                this.voicePromptsList.forEach((prompt, index) => {
+                    setTimeout(() => {
+                        if (this.isAnalysisActive) {
+                            this.speakPrompt(prompt, index);
+                        }
+                    }, prompt.time * 1000);
+                });
+            }
+
+            async speakPrompt(prompt, index) {
+                console.log('🗣️ Speaking prompt:', prompt.text.substring(0, 50) + '...');
+
+                this.voiceIndicator.style.display = 'block';
+                this.voiceIndicator.className = 'voice-indicator speaking';
+                this.voiceIndicator.textContent = '🔊 System speaking...';
+
+                const promptElements = document.querySelectorAll('.voice-prompt');
+                promptElements.forEach(el => el.classList.remove('active'));
+                if (promptElements[index]) {
+                    promptElements[index].classList.add('active');
+                    promptElements[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+
+                if (this.speechSynthesis) {
+                    this.speechSynthesis.cancel();
+                    await new Promise(resolve => setTimeout(resolve, 100));
+
+                    this.currentUtterance = new SpeechSynthesisUtterance(prompt.text);
+                    this.currentUtterance.rate = 0.9;
+                    this.currentUtterance.pitch = 1.0;
+                    this.currentUtterance.volume = 1.0;
+
+                    const voices = this.speechSynthesis.getVoices();
+                    const preferredVoice = voices.find(voice =>
+                        voice.lang.startsWith('en') && 
+                        (voice.name.includes('Google') || voice.name.includes('Female') || voice.default)
+                    );
+
+                    if (preferredVoice) {
+                        this.currentUtterance.voice = preferredVoice;
+                        console.log('🎙️ Using voice:', preferredVoice.name);
+                    }
+
+                    this.currentUtterance.onend = () => {
+                        console.log('✅ Speech ended');
+                        this.voiceIndicator.classList.remove('speaking');
+
+                        if (prompt.type === 'question') {
+                            this.voiceIndicator.className = 'voice-indicator listening';
+                            this.voiceIndicator.textContent = '🎤 Listening for your response...';
+                            this.voiceResponseCount++;
+                            this.updateSessionInfo();
+
+                            setTimeout(() => {
+                                if (this.voiceIndicator.classList.contains('listening')) {
+                                    this.voiceIndicator.style.display = 'none';
+                                }
+                            }, prompt.duration * 1000);
+                        } else {
+                            setTimeout(() => {
+                                this.voiceIndicator.style.display = 'none';
+                            }, 2000);
+                        }
+                    };
+
+                    this.currentUtterance.onerror = (event) => {
+                        console.error('❌ Speech error:', event);
+                        this.voiceIndicator.style.display = 'none';
+                    };
+
+                    try {
+                        this.speechSynthesis.speak(this.currentUtterance);
+                    } catch (error) {
+                        console.error('❌ Speech synthesis error:', error);
+                        this.voiceIndicator.textContent = 'Voice not available - please read the question';
+                        setTimeout(() => {
+                            this.voiceIndicator.style.display = 'none';
+                        }, 3000);
+                    }
+                } else {
+                    console.warn('⚠️ Speech synthesis not available');
+                    this.voiceIndicator.textContent = 'Voice not available - please read the question above';
+                    setTimeout(() => {
+                        this.voiceIndicator.style.display = 'none';
+                    }, 3000);
+                }
+            }
+
+            captureFrame() {
+                try {
+                    if (!this.videoElement.videoWidth || !this.videoElement.videoHeight) {
+                        console.warn('⚠️ Video not ready for capture');
+                        return;
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    canvas.width = this.videoElement.videoWidth;
+                    canvas.height = this.videoElement.videoHeight;
+
+                    ctx.drawImage(this.videoElement, 0, 0, canvas.width, canvas.height);
+
+                    const imageData = canvas.toDataURL('image/jpeg', 0.8);
+                    const timestamp = new Date().toISOString();
+                    const captureTime = Math.floor((Date.now() - this.captureStartTime) / 1000);
+
+                    const frameData = {
+                        id: this.currentFrame + 1,
+                        imageData: imageData,
+                        timestamp: timestamp,
+                        capture_time: captureTime,
+                        sessionID: this.sessionID
+                    };
+
+                    this.capturedFrames.push(frameData);
+                    this.currentFrame++;
+
+                    const img = document.createElement('img');
+                    img.src = imageData;
+                    img.className = 'frame-thumbnail';
+                    img.title = `Frame ${this.currentFrame} - ${captureTime}s`;
+                    this.framesThumbnails.appendChild(img);
+
+                    this.captureStatus.textContent = `📸 Frame ${this.currentFrame}/6 captured at ${captureTime}s`;
+                    this.updateSessionInfo();
+
+                    console.log(`✅ Captured frame ${this.currentFrame} at ${captureTime}s`);
+
+                } catch (error) {
+                    console.error('❌ Error capturing frame:', error);
+                    this.updateStatus('❌ Error capturing frame. Please try again.', 'error');
+                }
+            }
+
+            async endAnalysis() {
+                console.log('🏁 Ending analysis...');
+                this.isAnalysisActive = false;
+
+                if (this.captureInterval) {
+                    clearInterval(this.captureInterval);
+                    this.captureInterval = null;
+                }
+
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+
+                if (this.mediaRecorder && this.isRecording) {
+                    try {
+                        this.mediaRecorder.stop();
+                        this.isRecording = false;
+                        console.log('✅ Media recorder stopped');
+                    } catch (error) {
+                        console.error('❌ Error stopping media recorder:', error);
+                    }
+                }
+
+                if (this.speechSynthesis && this.currentUtterance) {
+                    this.speechSynthesis.cancel();
+                }
+
+                this.voiceIndicator.style.display = 'none';
+                this.captureStatus.textContent = `✅ Analysis complete! Captured ${this.capturedFrames.length} frames and recorded ${this.voiceResponseCount} voice responses over 60 seconds.`;
+                this.updateStatus('✅ 1-minute session complete! Click "Get Results" to analyze data.', 'info');
+
+                this.analyzeBtn.disabled = false;
+                this.retakeBtn.disabled = false;
+
+                this.progressFill.style.width = '100%';
+            }
+
+            async saveFullVoiceRecording(audioBlob) {
+                try {
+                    console.log('💾 Saving voice recording, size:', audioBlob.size, 'bytes');
+
+                    if (audioBlob.size === 0) {
+                        console.warn('⚠️ Audio blob is empty, skipping save');
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                        try {
+                            const base64Data = reader.result;
+
+                            console.log('📤 Uploading voice recording to server...');
+                            const response = await fetch('/api/save-voice', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    session_id: this.backendSessionId,
+                                    question_id: 'full_session',
+                                    audio_data: base64Data
+                                })
+                            });
+
+                            const result = await response.json();
+                            if (result.success) {
+                                console.log('✅ Voice recording saved:', result.filename, result.size, 'bytes');
+                            } else {
+                                console.error('❌ Failed to save voice recording:', result.error);
+                            }
+                        } catch (error) {
+                            console.error('❌ Error uploading voice recording:', error);
+                        }
+                    };
+
+                    reader.readAsDataURL(audioBlob);
+                } catch (error) {
+                    console.error('❌ Save voice error:', error);
+                }
+            }
+
+            async analyzeResults() {
+                this.analyzeBtn.disabled = true;
+                this.updateStatus('🔄 Uploading frames and analyzing emotions...', 'info');
+
+                try {
+                    console.log('📤 Uploading frames:', this.capturedFrames.length);
+                    const uploadResponse = await fetch('/api/upload-frames', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            session_id: this.backendSessionId,
+                            frames: this.capturedFrames
+                        })
+                    });
+
+                    if (!uploadResponse.ok) {
+                        throw new Error(`Upload failed: ${uploadResponse.status}`);
+                    }
+
+                    const uploadData = await uploadResponse.json();
+                    if (!uploadData.success) {
+                        throw new Error(uploadData.error || 'Frame upload failed');
+                    }
+
+                    this.updateStatus('🔍 Analyzing emotions and calculating stress levels...', 'info');
+
+                    const analysisResponse = await fetch('/api/analyze-emotions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            session_id: this.backendSessionId
+                        })
+                    });
+
+                    if (!analysisResponse.ok) {
+                        throw new Error(`Analysis failed: ${analysisResponse.status}`);
+                    }
+
+                    const analysisData = await analysisResponse.json();
+                    if (!analysisData.success) {
+                        throw new Error(analysisData.error || 'Emotion analysis failed');
+                    }
+
+                    this.currentAnalysisData = analysisData;
+
+                    this.updateStatus('💡 Getting personalized recommendations...', 'info');
+                    const recResponse = await fetch('/api/get-recommendations', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            dominant_emotion: analysisData.dominant_emotion,
+                            emotions: analysisData.average_emotions,
+                            stress_assessment: analysisData.stress_assessment,
+                            iris_data: analysisData.average_iris_data,
+                            mind_age_data: analysisData.mind_age_data
+                        })
+                    });
+
+                    let recData = { success: false };
+                    if (recResponse.ok) {
+                        recData = await recResponse.json();
+                    }
+
+                    this.displayResults(analysisData, recData);
+
+                    const analysisType = analysisData.deepface_used ? 'DeepFace' : 'mock';
+                    this.updateStatus(`✅ Analysis complete using ${analysisType}! Stress level: ${analysisData.stress_assessment.level}`, 'info');
+
+                } catch (error) {
+                    console.error('❌ Analysis error:', error);
+                    this.updateStatus(`❌ Analysis failed: ${error.message}`, 'error');
+                }
+
+                this.analyzeBtn.disabled = false;
+            }
+
+            displayResults(analysisData, recData) {
+                this.resultsSection.style.display = 'block';
+
+                const emotions = ['happy', 'sad', 'angry', 'surprise', 'fear', 'disgust', 'neutral'];
+                const averageEmotions = analysisData.average_emotions;
+                const stressAssessment = analysisData.stress_assessment;
+                const results = analysisData.results;
+
+                const resultHTML = `
+            <div class="stress-indicator">
+                <h4>Stress Level Assessment</h4>
+                <div class="stress-level">${stressAssessment.level}</div>
+                <div>Score: ${stressAssessment.score}/10</div>
+                <div style="margin-top: 10px; font-size: 0.9em;">${stressAssessment.description}</div>
+            </div>
+
+            <h4>Average Emotion Distribution (${this.capturedFrames.length} frames over 60 seconds)</h4>
+            <div style="margin: 20px 0;">
+                ${emotions.map(emotion => `
+                    <div class="emotion-result">
+                        <span style="font-weight: bold; text-transform: capitalize;">
+                            ${this.getEmotionEmoji(emotion)} ${emotion}
+                        </span>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="emotion-bar">
+                                <div class="emotion-fill" style="width: ${averageEmotions[emotion]}%; background: ${this.getEmotionColor(emotion)};"></div>
+                            </div>
+                            <span style="font-weight: bold; min-width: 60px;">${averageEmotions[emotion]}%</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div style="margin: 20px 0; padding: 15px; background: white; border-radius: 8px; border: 1px solid #dee2e6;">
+                <h4>📊 Session Summary</h4>
+                <p><strong>Frames Analyzed:</strong> ${results ? results.length : 0} out of ${this.capturedFrames.length}</p>
+                <p><strong>Voice Responses:</strong> ${this.voiceResponseCount} questions answered</p>
+                <p><strong>Dominant Emotion:</strong> ${analysisData.dominant_emotion}</p>
+                <p><strong>Analysis Method:</strong> ${analysisData.deepface_used ? 'DeepFace (AI)' : 'Mock Analysis'}</p>
+            </div>
+            
+            <details style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #dee2e6;">
+                <summary style="cursor: pointer; font-weight: bold;">📋 Detailed Frame-by-Frame Results</summary>
+                <div style="margin-top: 15px;">
+                    ${results ? results.map(result => `
+                        <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #3498db;">
+                            <strong>Frame ${result.frame}</strong> - ${result.capture_time}s - ${new Date(result.timestamp).toLocaleTimeString()}
+                            ${result.success ? `
+                                <div style="font-size: 0.9em; margin-top: 5px; color: #555;">
+                                    <strong>Dominant:</strong> ${result.dominant_emotion} | 
+                                    ${emotions.map(emotion =>
+                    `${emotion}: ${result.emotions[emotion]}%`
+                ).join(' | ')}
+                                </div>
+                            ` : `
+                                <div style="color: #e74c3c; font-size: 0.9em; margin-top: 5px;">
+                                    Error: ${result.error || 'Analysis failed'}
+                                </div>
+                            `}
+                        </div>
+                    `).join('') : '<p>No frame analysis data available.</p>'}
+                </div>
+            </details>
+        `;
+
+                this.emotionResults.innerHTML = resultHTML;
+
+                if (recData && recData.success) {
+                    this.recommendationsSection.style.display = 'block';
+                    this.recommendationsList.innerHTML = `
+                <p style="margin-bottom: 15px; font-style: italic; color: #666;">
+                    ${recData.personalized_insight || 'Based on your facial expressions and voice responses, here are personalized recommendations:'}
+                </p>
+                ${recData.recommendations.map(rec =>
+                        `<div class="recommendation-item">${rec}</div>`
+                    ).join('')}
+            `;
+                }
+
+                this.resultsSection.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            getEmotionEmoji(emotion) {
+                const emojis = {
+                    happy: '😊', sad: '😢', angry: '😠', surprise: '😮',
+                    fear: '😨', disgust: '🤢', neutral: '😐'
+                };
+                return emojis[emotion] || '😐';
+            }
+
+            getEmotionColor(emotion) {
+                const colors = {
+                    happy: '#2ecc71', sad: '#3498db', angry: '#e74c3c',
+                    surprise: '#f39c12', fear: '#9b59b6', disgust: '#1abc9c', neutral: '#95a5a6'
+                };
+                return colors[emotion] || '#95a5a6';
+            }
+
+            retakeTest() {
+                console.log('🔄 Retaking test...');
+
+                this.isAnalysisActive = false;
+
+                if (this.captureInterval) {
+                    clearInterval(this.captureInterval);
+                    this.captureInterval = null;
+                }
+
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+
+                if (this.mediaRecorder && this.isRecording) {
+                    try {
+                        this.mediaRecorder.stop();
+                        this.isRecording = false;
+                    } catch (error) {
+                        console.error('Error stopping media recorder during retake:', error);
+                    }
+                }
+
+                if (this.speechSynthesis && this.currentUtterance) {
+                    this.speechSynthesis.cancel();
+                }
+
+                this.capturedFrames = [];
+                this.voiceResponseCount = 0;
+                this.questionRecorders = [];
+                this.currentFrame = 0;
+                this.backendSessionId = null;
+                this.framesThumbnails.innerHTML = '<span style="color: #6c757d;">Captured frames will appear here</span>';
+                this.progressFill.style.width = '0%';
+                this.progressBar.style.display = 'none';
+                this.captureStatus.style.display = 'none';
+                this.captureOverlay.style.display = this.stream ? 'block' : 'none';
+                this.voiceIndicator.style.display = 'none';
+                this.voicePrompts.style.display = 'none';
+                this.resultsSection.style.display = 'none';
+                this.currentAnalysisData = null;
+                this.captureTimer.textContent = '00:00';
+
+                const promptElements = document.querySelectorAll('.voice-prompt');
+                promptElements.forEach(el => el.classList.remove('active'));
+
+                this.beginBtn.disabled = this.stream ? false : true;
+                this.analyzeBtn.disabled = true;
+                this.retakeBtn.disabled = true;
+
+                this.sessionID = this.generateSessionID();
+                this.updateSessionInfo();
+
+                if (this.stream) {
+                    this.updateStatus('✅ Ready for new test. Click "Start Analysis" to begin.', 'info');
+                } else {
+                    this.updateStatus('⚠️ Please start camera first.', 'warning');
+                }
+            }
+
+            stopCamera() {
+                console.log('🛑 Stopping camera...');
+
+                this.isAnalysisActive = false;
+
+                if (this.captureInterval) clearInterval(this.captureInterval);
+                if (this.timerInterval) clearInterval(this.timerInterval);
+
+                if (this.mediaRecorder && this.isRecording) {
+                    try {
+                        this.mediaRecorder.stop();
+                        this.isRecording = false;
+                    } catch (error) {
+                        console.error('Error stopping media recorder:', error);
+                    }
+                }
+
+                if (this.speechSynthesis) {
+                    this.speechSynthesis.cancel();
+                }
+
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => {
+                        track.stop();
+                        console.log('Stopped track:', track.kind);
+                    });
+                    this.stream = null;
+                }
+
+                this.videoElement.style.display = 'none';
+                this.cameraPlaceholder.style.display = 'flex';
+                this.captureOverlay.style.display = 'none';
+                this.voiceIndicator.style.display = 'none';
+
+                this.startBtn.disabled = false;
+                this.beginBtn.disabled = true;
+                this.analyzeBtn.disabled = true;
+                this.retakeBtn.disabled = true;
+
+                this.updateStatus('Camera stopped. Click "Start Camera" to begin.', 'info');
+            }
+        }
+
+        let system;
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Initializing Enhanced Burnout Detection System with Iris Tracking...');
+            system = new IntegratedStressDetectionSystem();
+
+            window.addEventListener('beforeunload', () => {
+                if (system && system.stream) {
+                    system.stopCamera();
+                }
+                if (system && system.speechSynthesis) {
+                    system.speechSynthesis.cancel();
+                }
+            });
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden && system && system.isAnalysisActive) {
+                    console.log('Page hidden during analysis - stopping');
+                    system.endAnalysis();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

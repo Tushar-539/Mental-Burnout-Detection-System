@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Burnout Detection - Step 1</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+        color: #1e293b;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    nav {
+        background: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 1rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+    .nav-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .logo {
+        font-size: 1.5rem;
+        font-weight: bold;
+        background: linear-gradient(135deg, #2563eb, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .nav-links {
+        display: flex;
+        gap: 2rem;
+        list-style: none;
+    }
+    .nav-links a {
+        text-decoration: none;
+        color: #475569;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+    .nav-links a:hover { color: #2563eb; }
+
+    .main-container {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 3rem 2rem;
+    }
+
+    .container {
+        background: white;
+        padding: 2.5rem 3rem;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 700px;
+        text-align: center;
+    }
+
+    .header h1 {
+        font-size: 24px;
+        color: #2563eb;
+        margin-bottom: 6px;
+    }
+
+    .header p {
+        color: #64748b;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+    .progress-bar {
+        height: 5px;
+        background: #e0e0e0;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        width: 33.33%;
+        background: linear-gradient(90deg, #2563eb, #8b5cf6);
+        transition: width 0.3s;
+    }
+
+    .row { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+    .form-group { flex: 1; min-width: 200px; }
+    .form-group h3 { margin-bottom: 12px; color: #1e293b; }
+
+    .options { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+    .option-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        border: 2px solid #ccc;
+        border-radius: 15px;
+        cursor: pointer;
+        justify-content: center;
+        width: 180px;
+        background: #fff;
+        transition: all 0.3s;
+    }
+    .option-box.selected { border-color: #2563eb; background: #e6f0ff; }
+    .option-box img { width: 36px; height: 36px; border-radius: 50%; }
+
+    button {
+        margin-top: 20px;
+        padding: 12px;
+        width: 100%;
+        font-size: 16px;
+        font-weight: 600;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        background: linear-gradient(135deg, #2563eb, #8b5cf6);
+        transition: all 0.3s;
+    }
+    button:hover { opacity: 0.9; transform: scale(1.05); }
+    button:active { transform: scale(0.98); }
+
+    footer {
+        background: white;
+        padding: 2rem;
+        text-align: center;
+        color: #64748b;
+    }
+
+    @media (max-width: 768px) {
+        .row { flex-direction: column; gap: 15px; }
+        .container { width: 90%; padding: 1.5rem; }
+    }
+</style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-container">
+        <div class="logo">🧠 Burnout Detection</div>
+        <ul class="nav-links">
+            <!-- <li><a href="home.html">Home</a></li>
+            <li><a href="gender.html">Questionnaire</a></li>
+            <li><a href="#real-time">Real-time Analysis</a></li>
+            <li><a href="#about">About Us</a></li> -->
+        </ul>
+    </div>
+</nav>
+
+<div class="main-container">
+    <div class="container">
+        <div class="header">
+            <h1>Personal Information</h1>
+            <p>Step 1 of 3 - Let's get to know you better</p>
+        </div>
+
+        <div class="progress-bar"><div class="progress-fill"></div></div>
+
+        <form id="userForm">
+            <div class="row">
+                <div class="form-group">
+                    <h3>Select Gender</h3>
+                    <div class="options" id="genderOptions">
+                        <div class="option-box" data-value="Male">
+                            <span style="font-size: 36px;">👨</span><span>Male</span>
+                        </div>
+                        <div class="option-box" data-value="Female">
+                            <span style="font-size: 36px;">👩</span><span>Female</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <h3>Select Age Group</h3>
+                    <div class="options" id="ageOptions">
+                        <div class="option-box" data-value="15-20">15 - 20</div>
+                        <div class="option-box" data-value="21-30">21 - 30</div>
+                        <div class="option-box" data-value="31-40">31 - 40</div>
+                        <div class="option-box" data-value="41-50">41 - 50</div>
+                        <div class="option-box" data-value="51-60">51-60</div>
+                        <div class="option-box" data-value="60+">60+</div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" id="nextBtn">Continue to Next Step →</button>
+        </form>
+    </div>
+</div>
+
+<footer>
+    <p>&copy; 2025 Burnout Detection System. Supporting your mental wellness journey.</p>
+</footer>
+
+<script>
+function setupOptions(containerId) {
+    const options = document.querySelectorAll(`#${containerId} .option-box`);
+    options.forEach(option => {
+        option.addEventListener('click', () => {
+            options.forEach(o => o.classList.remove('selected'));
+            option.classList.add('selected');
+        });
+    });
+}
+setupOptions('genderOptions');
+setupOptions('ageOptions');
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+    const gender = document.querySelector('#genderOptions .option-box.selected')?.dataset.value;
+    const age = document.querySelector('#ageOptions .option-box.selected')?.dataset.value;
+    
+    if(!gender || !age){ 
+        alert('Please select both gender and age group to continue.'); 
+        return; 
+    }
+    
+    // Store data in sessionStorage and navigate to occupation.html
+    sessionStorage.setItem('gender', gender);
+    sessionStorage.setItem('age', age);
+    window.location.href = 'occupation.html';
+});
+</script>
+
+</body>
+</html>

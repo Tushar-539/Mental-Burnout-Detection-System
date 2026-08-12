@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Instagram with Burnout Detection</title>
+<link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #fff;
+    transition: all 0.3s ease;
+    overflow-x: hidden;
+    position: relative;
+    cursor: none;
+  }
+
+  body.light {
+    background-color: #f5f5f5;
+    color: #000;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #333;
+    background: #1e1e1e;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+  }
+
+  body.light header {
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+  }
+
+  header h1 {
+    font-size: 20px;
+    font-weight: bold;
+  }
+
+  .mode-toggle {
+    cursor: pointer;
+    font-size: 20px;
+  }
+
+  .feed {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .post {
+    background: #1e1e1e;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  }
+
+  body.light .post {
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+
+  .post img, .post video {
+    width: 100%;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px;
+  }
+
+  .actions i {
+    font-size: 22px;
+    cursor: pointer;
+    transition: transform 0.2s ease, color 0.3s;
+    color: #aaa;
+  }
+
+  .actions i:hover {
+    transform: scale(1.2);
+  }
+
+  .actions i.active {
+    color: #ff4757;
+  }
+
+  .caption {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .comment-box {
+    display: none;
+    flex-direction: column;
+    padding: 10px;
+  }
+
+  .comment-box textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    resize: none;
+    font-size: 14px;
+    background: rgba(255,255,255,0.1);
+    color: inherit;
+  }
+
+  body.light .comment-box textarea {
+    background: rgba(0,0,0,0.05);
+    color: #000;
+  }
+
+  .send-btn {
+    margin-top: 5px;
+    padding: 8px;
+    border: none;
+    background: #ff4757;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    align-self: flex-end;
+  }
+
+  .send-btn:hover {
+    background: #ff6b81;
+  }
+
+  .comments-list {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  #snow-canvas {
+    position: fixed;
+    top:0; left:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    z-index:1;
+  }
+
+  .cursor {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ff4757;
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s ease, width 0.2s ease, height 0.2s ease, background 0.2s ease;
+    z-index: 9999;
+    mix-blend-mode: difference;
+  }
+
+  .cursor.hovered {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 71, 87, 0.2);
+  }
+
+  .trail {
+    position: fixed;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ff4757;
+    pointer-events: none;
+    opacity: 0.8;
+    z-index: 9998;
+  }
+
+  .sparkle {
+    position: fixed;
+    width: 4px;
+    height: 4px;
+    background: radial-gradient(circle, #fff 0%, #ff4757 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 1;
+    transform: translate(-50%, -50%);
+    z-index: 9998;
+    animation: sparkle-fade 0.6s forwards;
+  }
+
+  @keyframes sparkle-fade {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+  }
+
+  #checkBurnout {
+    margin: 20px auto;
+    display: block;
+    padding: 12px 30px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    background: #ff4757;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+  }
+
+  #checkBurnout:hover {
+    background: #ff6b81;
+    transform: scale(1.05);
+  }
+
+  #checkBurnout:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: scale(1);
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Mini Instagram</h1>
+  <i class="ri-moon-line mode-toggle" id="modeToggle"></i>
+</header>
+
+<canvas id="snow-canvas"></canvas>
+<div class="feed" id="feed"></div>
+<div class="cursor" id="cursor"></div>
+
+<button id="checkBurnout">Check Burnout Status</button>
+
+<script>
+  const posts = [
+    { type: "img", src: "static/sarcastic_study.jpg", topic: "sarcastic_study", caption: "When studying feels like a never-ending cycle 😅" },
+    { type: "video", src: "static/stress_video.mp4", topic: "rest", caption: "Time to rest and recharge 🌙" },
+    { type: "img", src: "static/2-20-30.jpg", topic: "study", caption: "Study goals for the week 📚" },
+    { type: "img", src: "static/rest_post.jpg", topic: "work_stress", caption: "Work stress is real 😰" },
+    { type: "video", src: "static/study_reel.mp4", topic: "motivation", caption: "Stay motivated! You got this 💪" },
+    { type: "img", src: "static/sarcastic_stress.jpg", topic: "stress", caption: "Stress level: Maximum 📈" },
+    { type: "img", src: "static/funny_post.jpg", topic: "fun", caption: "Having fun is important too! 🎉" },
+    { type: "img", src: "static/funny_work_post.jpg", topic: "fun_work", caption: "Making work fun 😄" }
+  ];
+
+  const feed = document.getElementById("feed");
+
+  posts.forEach((post, index) => {
+    const postElement = document.createElement("div");
+    postElement.classList.add("post");
+    postElement.dataset.topic = post.topic;
+    postElement.dataset.index = index;
+
+    let mediaHTML = "";
+    if(post.type === "img"){
+      mediaHTML = `<img src="${post.src}" alt="Post ${index+1}">`;
+    } else if(post.type === "video"){
+      mediaHTML = `
+        <video controls muted loop style="width:100%; border-radius:10px 10px 0 0;">
+          <source src="${post.src}" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      `;
+    }
+
+    postElement.innerHTML = `
+      ${mediaHTML}
+      <div class="actions">
+        <i class="ri-thumb-up-line like-btn"></i>
+        <i class="ri-thumb-down-line dislike-btn"></i>
+        <i class="ri-heart-line heart-btn"></i>
+        <i class="ri-chat-3-line comment-btn"></i>
+      </div>
+      <div class="caption">${post.caption || ""}</div>
+
+      <div class="comment-box">
+        <textarea placeholder="Write a comment..."></textarea>
+        <button class="send-btn">Send</button>
+      </div>
+      <div class="comments-list"></div>
+    `;
+
+    feed.appendChild(postElement);
+
+    const likeBtn = postElement.querySelector(".like-btn");
+    const dislikeBtn = postElement.querySelector(".dislike-btn");
+    const heartBtn = postElement.querySelector(".heart-btn");
+    const commentBtn = postElement.querySelector(".comment-btn");
+    const commentBox = postElement.querySelector(".comment-box");
+    const sendBtn = postElement.querySelector(".send-btn");
+    const textarea = postElement.querySelector("textarea");
+    const commentsList = postElement.querySelector(".comments-list");
+
+    const buttons = [likeBtn, dislikeBtn, heartBtn];
+    buttons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        buttons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+      });
+    });
+
+    commentBtn.addEventListener("click", () => {
+      commentBox.style.display = commentBox.style.display === "flex" ? "none" : "flex";
+    });
+
+    sendBtn.addEventListener("click", () => {
+      if (textarea.value.trim() !== "") {
+        const comment = document.createElement("p");
+        comment.textContent = textarea.value;
+        commentsList.appendChild(comment);
+        textarea.value = "";
+      }
+    });
+  });
+
+  // Dark/Light Mode
+  const modeToggle = document.getElementById("modeToggle");
+  modeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("light");
+    modeToggle.classList.toggle("ri-sun-line");
+    modeToggle.classList.toggle("ri-moon-line");
+  });
+
+  // Snow Effect
+  const canvas = document.getElementById("snow-canvas");
+  const ctx = canvas.getContext("2d");
+  let W = canvas.width = window.innerWidth;
+  let H = canvas.height = window.innerHeight;
+  let flakes = [];
+  const maxFlakes = 80;
+
+  function initFlakes(){
+    flakes = [];
+    for(let i=0;i<maxFlakes;i++){
+      flakes.push({
+        x: Math.random()*W,
+        y: Math.random()*H,
+        r: Math.random()*2 + 0.5,
+        d: Math.random()*maxFlakes,
+        speed: Math.random()*1 + 0.3
+      });
+    }
+  }
+
+  function drawFlakes(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.beginPath();
+    for(let i=0;i<flakes.length;i++){
+      let f = flakes[i];
+      ctx.moveTo(f.x, f.y);
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI*2, true);
+    }
+    ctx.fill();
+    moveFlakes();
+  }
+
+  function moveFlakes(){
+    for(let i=0;i<flakes.length;i++){
+      let f = flakes[i];
+      f.y += Math.pow(f.d,0.5)*0.05 + f.speed;
+      f.x += Math.sin(f.d)*0.5;
+      if(f.y>H){ 
+        flakes[i] = {x: Math.random()*W, y: 0, r: f.r, d: f.d, speed: f.speed};
+      }
+    }
+  }
+
+  function animateSnow(){
+    drawFlakes();
+    requestAnimationFrame(animateSnow);
+  }
+
+  window.addEventListener('resize', ()=>{ 
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  });
+
+  initFlakes();
+  animateSnow();
+
+  // Cursor & Sparkles
+  const cursor = document.getElementById("cursor");
+  document.addEventListener("mousemove", (e)=>{
+    cursor.style.left = e.clientX + "px";
+    cursor.style.top = e.clientY + "px";
+
+    const trail = document.createElement("div");
+    trail.classList.add("trail");
+    document.body.appendChild(trail);
+    trail.style.left = e.clientX + "px";
+    trail.style.top = e.clientY + "px";
+    setTimeout(()=>{ trail.remove(); },400);
+
+    const sparkle = document.createElement("div");
+    sparkle.classList.add("sparkle");
+    const offsetX = (Math.random()-0.5)*20;
+    const offsetY = (Math.random()-0.5)*20;
+    sparkle.style.left = (e.clientX + offsetX) + "px";
+    sparkle.style.top = (e.clientY + offsetY) + "px";
+    document.body.appendChild(sparkle);
+    setTimeout(()=>{ sparkle.remove(); },600);
+  });
+
+  const hoverElements = document.querySelectorAll(".like-btn, .dislike-btn, .heart-btn, .comment-btn, .send-btn, #checkBurnout");
+  hoverElements.forEach(el => {
+    el.addEventListener("mouseenter", () => cursor.classList.add("hovered"));
+    el.addEventListener("mouseleave", () => cursor.classList.remove("hovered"));
+  });
+
+  // Check Burnout Button
+  document.getElementById("checkBurnout").addEventListener("click", function() {
+    const button = this;
+    button.disabled = true;
+    button.textContent = "Analyzing...";
+
+    const postsData = [];
+
+    document.querySelectorAll(".post").forEach(post => {
+      const topic = post.dataset.topic;
+      let action = "";
+      
+      if(post.querySelector(".like-btn").classList.contains("active")) action = "like";
+      else if(post.querySelector(".dislike-btn").classList.contains("active")) action = "dislike";
+      else if(post.querySelector(".heart-btn").classList.contains("active")) action = "heart";
+
+      const comments = Array.from(post.querySelectorAll(".comments-list p"))
+        .map(p => p.textContent)
+        .join(" ");
+
+      postsData.push({
+        topic: topic,
+        action: action,
+        comment: comments
+      });
+    });
+
+    fetch("/burnout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ posts: postsData })
+    })
+    .then(response => response.json())
+    .then(data => {
+      localStorage.setItem("burnoutData", JSON.stringify(data));
+      window.location.href = "/resultinsta";
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      button.disabled = false;
+      button.textContent = "Check Burnout Status";
+      alert("An error occurred. Please try again.");
+    });
+  });
+</script>
+</body>
+</html>

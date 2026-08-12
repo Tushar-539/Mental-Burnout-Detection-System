@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Burnout Questionnaire</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #f6f8fc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 480px;
+      animation: slideDown 0.6s ease;
+    }
+    h2 {
+      font-size: 22px;
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .options { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 12px; 
+      margin: 25px 0; 
+    }
+    .option {
+      background: #f0f4ff;
+      padding: 14px;
+      border-radius: 10px;
+      border: 2px solid #cdd9ff;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 18px;
+      text-align: center;
+    }
+    .option:hover { 
+      background: #e1e9ff; 
+      transform: scale(1.02); 
+    }
+    input[type="radio"] { display: none; }
+    input[type="radio"]:checked + .option {
+      background: #4a90e2;
+      color: white;
+      border-color: #4a90e2;
+    }
+    .progress-container { 
+      height: 10px; 
+      background: #e6e6e6; 
+      border-radius: 6px; 
+      overflow: hidden; 
+      margin-top: 20px; 
+    }
+    .progress-bar { 
+      height: 100%; 
+      width: 0%; 
+      background: linear-gradient(90deg, #4a90e2, #6bc5f8); 
+      transition: width 0.4s ease; 
+    }
+    @keyframes slideDown { 
+      from {opacity: 0; transform: translateY(-40px);} 
+      to {opacity: 1; transform: translateY(0);} 
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="quiz-box">
+    <h2 id="question-text"></h2>
+    <form id="question-form" class="options"></form>
+    <div class="progress-container">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+  </div>
+
+  <script>
+    // Sample questions - replace with your actual questions
+    const questions = [
+      "Do you feel emotionally drained from your work?",
+      "Do you feel tired when you wake up in the morning?",
+      "Do you feel frustrated or irritable at work?",
+      "Do you feel like you're working too hard?",
+      "Do you feel stressed at work?",
+      "Do you feel burned out from work?",
+      "Do you feel unhappy or depressed at work?",
+      "Do you feel you have accomplished many worthwhile things?",
+      "Do you feel satisfied with your job?",
+      "Do you have positive relationships with coworkers?"
+    ];
+
+    let responses = [];
+    let current = 0;
+
+    const questionText = document.getElementById("question-text");
+    const form = document.getElementById("question-form");
+    const quizBox = document.getElementById("quiz-box");
+    const progressBar = document.getElementById("progress-bar");
+
+    const fixedOptions = ["Never", "Rarely", "Sometimes", "Often", "Always"];
+
+    function loadQuestion() {
+      if (current < questions.length) {
+        questionText.textContent = (current + 1) + " → " + questions[current];
+        form.innerHTML = "";
+
+        fixedOptions.forEach(optionText => {
+          const label = document.createElement("label");
+          label.innerHTML = `
+            <input type="radio" name="answer" value="${optionText}">
+            <div class="option">${optionText}</div>
+          `;
+          form.appendChild(label);
+        });
+
+        progressBar.style.width = (current / questions.length * 100) + "%";
+        quizBox.style.animation = "slideDown 0.6s ease";
+      } else {
+        // All questions answered - NAVIGATE TO index.html
+        alert("Thank you for completing the questionnaire! Redirecting to results...");
+        window.location.href = "result.html"; // Change URL as needed
+      }
+    }
+
+    form.addEventListener("change", (e) => {
+      if (e.target && e.target.name === "answer") {
+        responses.push({ question: questions[current], answer: e.target.value });
+        // small animation gap
+        quizBox.style.animation = "none";
+        setTimeout(() => {
+          current++;
+          loadQuestion();
+        }, 200);
+      }
+    });
+
+    loadQuestion();
+  </script>
+</body>
+</html>

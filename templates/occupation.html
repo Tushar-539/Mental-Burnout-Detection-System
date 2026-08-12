@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Burnout Detection - Step 2</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+        color: #1e293b;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    nav {
+        background: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 1rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+    .nav-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .logo {
+        font-size: 1.5rem;
+        font-weight: bold;
+        background: linear-gradient(135deg, #2563eb, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .nav-links {
+        display: flex;
+        gap: 2rem;
+        list-style: none;
+    }
+    .nav-links a {
+        text-decoration: none;
+        color: #475569;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+    .nav-links a:hover { color: #2563eb; }
+
+    .main-container {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 3rem 2rem;
+    }
+
+    .container {
+        background: white;
+        padding: 2.5rem 3rem;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 800px;
+        text-align: center;
+    }
+
+    .header h1 {
+        font-size: 24px;
+        color: #2563eb;
+        margin-bottom: 6px;
+    }
+
+    .header p {
+        color: #64748b;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+    .progress-bar {
+        height: 5px;
+        background: #e0e0e0;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        width: 66.66%;
+        background: linear-gradient(90deg, #2563eb, #8b5cf6);
+        transition: width 0.3s;
+    }
+
+    .occupation-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        justify-items: center;
+        align-items: stretch;
+    }
+
+    .occupation-option {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+        border: 2px solid #ccc;
+        border-radius: 15px;
+        cursor: pointer;
+        background: #fff;
+        transition: all 0.3s;
+        text-align: center;
+        height: 120px;
+        width: 100%;
+    }
+
+    .occupation-option.selected {
+        border-color: #2563eb;
+        background: #e6f0ff;
+    }
+
+    .occupation-icon {
+        font-size: 32px;
+        margin-bottom: 8px;
+    }
+
+    button {
+        margin-top: 20px;
+        padding: 12px;
+        width: 100%;
+        font-size: 16px;
+        font-weight: 600;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        background: linear-gradient(135deg, #2563eb, #8b5cf6);
+        transition: all 0.3s;
+    }
+    button:hover { opacity: 0.9; transform: scale(1.05); }
+    button:active { transform: scale(0.98); }
+
+    footer {
+        background: white;
+        padding: 2rem;
+        text-align: center;
+        color: #64748b;
+    }
+
+    @media (max-width: 768px) {
+        .occupation-grid { grid-template-columns: repeat(2, 1fr); }
+        .container { width: 90%; padding: 1.5rem; }
+    }
+    @media (max-width: 480px) {
+        .occupation-grid { grid-template-columns: 1fr; }
+    }
+</style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-container">
+        <div class="logo">🧠 Burnout Detection</div>
+        <ul class="nav-links">
+            <li><a href="home.html">Home</a></li>
+            <li><a href="gender.html">Questionnaire</a></li>
+            <li><a href="#real-time">Real-time Analysis</a></li>
+            <li><a href="#about">About Us</a></li>
+        </ul>
+    </div>
+</nav>
+
+<div class="main-container">
+    <div class="container">
+        <div class="header">
+            <h1>Occupation Information</h1>
+            <p>Step 2 of 3 - Tell us about your occupation</p>
+        </div>
+
+        <div class="progress-bar"><div class="progress-fill"></div></div>
+
+        <form id="occupationForm">
+            <div class="occupation-grid">
+                <div class="occupation-option" data-value="Student">
+                    <div class="occupation-icon">🎓</div>
+                    <span>Student</span>
+                </div>
+                <div class="occupation-option" data-value="Teacher/Professor">
+                    <div class="occupation-icon">👨‍🏫</div>
+                    <span>Teacher/Professor</span>
+                </div>
+                <div class="occupation-option" data-value="Homemaker">
+                    <div class="occupation-icon">🏠</div>
+                    <span>Homemaker</span>
+                </div>
+                <div class="occupation-option" data-value="Private Employee">
+                    <div class="occupation-icon">👔</div>
+                    <span>Private Employee</span>
+                </div>
+                <div class="occupation-option" data-value="Retired">
+                    <div class="occupation-icon">🌴</div>
+                    <span>Retired</span>
+                </div>
+                <div class="occupation-option" data-value="Healthcare Professional">
+                    <div class="occupation-icon">⚕️</div>
+                    <span>Healthcare Professional</span>
+                </div>
+                <div class="occupation-option" data-value="Business Owner">
+                    <div class="occupation-icon">💼</div>
+                    <span>Business Owner</span>
+                </div>
+                <div class="occupation-option" data-value="Government Employee">
+                    <div class="occupation-icon">🏛️</div>
+                    <span>Government Employee</span>
+                </div>
+                <div class="occupation-option" data-value="Unemployed">
+                    <div class="occupation-icon">🔍</div>
+                    <span>Unemployed</span>
+                </div>
+            </div>
+
+            <button type="button" id="nextBtn">Continue to Next Step →</button>
+        </form>
+    </div>
+</div>
+
+<footer>
+    <p>&copy; 2025 Burnout Detection System. Supporting your mental wellness journey.</p>
+</footer>
+
+<script>
+const options = document.querySelectorAll('.occupation-option');
+options.forEach(option => {
+  option.addEventListener('click', () => {
+    options.forEach(o => o.classList.remove('selected'));
+    option.classList.add('selected');
+  });
+});
+
+// BUTTON CONNECTS TO marital_status.html
+document.getElementById('nextBtn').addEventListener('click', () => {
+  const occupation = document.querySelector('.occupation-option.selected')?.dataset.value;
+  
+  if(!occupation){ 
+    alert('Please select your occupation to continue.'); 
+    return; 
+  }
+  
+  // Navigate to marital_status.html
+  window.location.href = 'marital_status.html';
+});
+</script>
+
+</body>
+</html>
